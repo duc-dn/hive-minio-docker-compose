@@ -1,0 +1,34 @@
+version: "2"
+
+services:
+  mariadb:
+    image: mariadb:latest
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: metastore_db
+
+  # make sure that you specify correct volume to be mounted
+  minio:
+    image: 'quay.io/minio/minio'
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+
+  hive-metastore:
+    build: .
+    image: hive-metastore:latest
+    container_name: hive-metastore
+    volumes:
+      - ./conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml
+    ports:
+    - 9083:9083
+    depends_on:
+      - mariadb
